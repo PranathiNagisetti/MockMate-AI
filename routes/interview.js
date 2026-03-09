@@ -3,6 +3,7 @@ const router = express.Router();
 const InterviewSession = require("../models/InterviewSession");
 const authMiddleware = require("../middleware/authMiddleware");
 const {generateInterviewQuestions} = require("../utils/gemini");
+const evaluateAnswer = require("../utils/evaluateAnswer")
 // 🔥 Start Interview
 router.post("/start", authMiddleware, async (req, res) => {
   try {
@@ -80,6 +81,47 @@ router.post("/submit-answer", authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+router.post("/submit", authMiddleware, async (req,res)=>{
+
+try{
+
+const { sessionId, answers } = req.body
+
+const interview = await InterviewSession.findById(sessionId)
+
+if(!interview){
+return res.status(404).json({message:"Interview session not found"})
+}
+
+for(let i=0;i<answers.length;i++){
+
+const evaluation = await evaluateAnswer(
+interview.questions[i].questionText,
+answers[i]
+)
+
+interview.questions[i].answerText = answers[i]
+interview.questions[i].score = evaluation.score
+interview.questions[i].feedback = evaluation.feedback
+
+}
+
+await interview.save()
+
+res.json({
+message:"Interview evaluated successfully",
+interview
+})
+
+}catch(error){
+
+console.error(error)
+res.status(500).json({error:"Evaluation failed"})
+
+}
+
+})
 
 // 🔥 Complete Interview
 router.post("/complete", authMiddleware, async (req, res) => {
