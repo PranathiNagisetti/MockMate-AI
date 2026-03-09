@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const InterviewSession = require("../models/InterviewSession");
 const authMiddleware = require("../middleware/authMiddleware");
-const generateInterviewQuestions = require("../utils/gemini");
+const {generateInterviewQuestions} = require("../utils/gemini");
 // 🔥 Start Interview
 router.post("/start", authMiddleware, async (req, res) => {
   try {
