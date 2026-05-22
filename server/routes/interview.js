@@ -1,117 +1,398 @@
 const express = require("express");
 const router = express.Router();
-const InterviewSession = require("../models/InterviewSession");
-const authMiddleware = require("../middleware/authMiddleware");
-const generateInterviewQuestions = require("../utils/gemini");
-// 🔥 Start Interview
-router.post("/start", authMiddleware, async (req, res) => {
-  try {
-    const { role, difficulty } = req.body;
 
-    // 🔥 Generate AI Questions
-    const aiQuestions = await generateInterviewQuestions(role, difficulty);
+const InterviewSession = require(
+  "../models/InterviewSession"
+);
 
-    const formattedQuestions = aiQuestions.map(q => ({
-      questionText: q,
-      answerText: "",
-      score: 0,
-      feedback: ""
-    }));
+const authMiddleware = require(
+  "../middleware/authMiddleware"
+);
 
-    const newSession = new InterviewSession({
-      user: req.user,
-      role,
-      difficulty,
-      questions: formattedQuestions,   // ✅ FIXED
-      status: "Started"
-    });
+const {
+  generateInterviewQuestions
+} = require("../utils/gemini");
 
-    await newSession.save();
+const evaluateAnswer = require(
+  "../utils/evaluateAnswer"
+);
 
-    res.status(201).json({
-      message: "Interview session started",
-      sessionId: newSession._id,
-      questions: formattedQuestions   // ✅ FIXED
-    });
 
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
-// 🔥 Submit Answer
-router.post("/submit-answer", authMiddleware, async (req, res) => {
-  try {
-    const { sessionId, questionIndex, answer } = req.body;
+// START INTERVIEW
+router.post(
+  "/start",
+  authMiddleware,
+  async (req, res) => {
 
-    const session = await InterviewSession.findById(sessionId);
+    try {
 
-    if (!session) {
-      return res.status(404).json({ message: "Session not found" });
+      const {
+        role,
+        difficulty,
+        experience
+      } = req.body;
+      if (!role || !difficulty || !experience) {
+
+        return res.status(400).json({
+          message:
+            "Role, difficulty and experience are required"
+        })
+
+      }
+      const aiQuestions =
+      await generateInterviewQuestions(
+          role,
+          experience,
+          5
+        );
+
+      if (
+        !Array.isArray(aiQuestions) ||
+        aiQuestions.length === 0
+      ) {
+
+        return res.status(500).json({
+          message:
+            "Failed to generate interview questions"
+        });
+
+      }
+
+      const formattedQuestions =
+        aiQuestions.map((q) => ({
+          questionText: q,
+          answerText: "",
+          score: 0,
+          feedback: {
+            correctness: 0,
+            clarity: 0,
+            technicalDepth: 0,
+            relevance: 0,
+            communication: 0,
+            overall: ""
+          }
+        }));
+
+      const newSession =
+        new InterviewSession({
+          user: req.user.id,
+          role,
+          difficulty,
+          questions: formattedQuestions,
+          status: "Started"
+        });
+
+      await newSession.save();
+
+      res.json({
+        sessionId: newSession._id,
+        questions: formattedQuestions
+      });
+
+    } catch (error) {
+
+      console.log(
+        "START INTERVIEW ERROR:",
+        error
+      );
+
+      res.status(500).json({
+        message:
+          "Failed to start interview"
+      });
+
     }
 
-    // Update answer
-    session.questions[questionIndex].answerText = answer;
+  }
+);
 
-    // 🔥 Temporary Scoring Logic (Basic)
-    let score = 0;
-    let feedback = "";
 
-    if (answer.length > 50) {
-      score = 8;
-      feedback = "Good detailed answer.";
-    } else {
-      score = 4;
-      feedback = "Answer needs more depth.";
+// GET QUESTIONS
+router.get(
+  "/:sessionId",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const session =
+        await InterviewSession.findById(
+          req.params.sessionId
+        );
+
+      if (!session) {
+        return res.status(404).json({
+          message: "Session not found"
+        });
+      }
+
+      const questions =
+        session.questions.map(
+          (q) => q.questionText
+        );
+
+      res.json({ questions });
+
+    } catch (error) {
+
+      res.status(500).json({
+        message:
+          "Failed to load questions"
+      });
+
     }
 
-    session.questions[questionIndex].score = score;
-    session.questions[questionIndex].feedback = feedback;
+  }
+);
 
-    await session.save();
 
-    res.json({
-      message: "Answer submitted",
-      score,
-      feedback
+// SUBMIT ANSWER
+router.post(
+  "/submit-answer",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const {
+        sessionId,
+        questionIndex,
+        answer
+      } = req.body;
+
+      const session =
+        await InterviewSession.findById(
+          sessionId
+        );
+
+      if (!session) {
+        return res.status(404).json({
+          message: "Session not found"
+        });
+      }
+
+      session.questions[questionIndex]
+        .answerText = answer;
+
+      const evaluation =
+        await evaluateAnswer(
+          session.questions[questionIndex]
+            .questionText,
+          answer
+        );
+
+      session.questions[questionIndex]
+        .score = evaluation.finalScore;
+
+      session.questions[questionIndex]
+        .feedback = {
+          correctness:
+            evaluation.correctness,
+
+          clarity:
+            evaluation.clarity,
+
+          technicalDepth:
+            evaluation.technicalDepth,
+
+          relevance:
+            evaluation.relevance,
+
+          communication:
+            evaluation.communication,
+
+          overall:
+            evaluation.feedback
+        };
+
+      await session.save();
+
+     res.json({
+      score: evaluation.finalScore,
+
+      feedback: evaluation.feedback
     });
 
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+    } catch (error) {
 
-// 🔥 Complete Interview
-router.post("/complete", authMiddleware, async (req, res) => {
-  try {
-    const { sessionId } = req.body;
+      console.log(
+        "START INTERVIEW ERROR:"
+      )
 
-    const session = await InterviewSession.findById(sessionId);
+      console.log(error)
 
-    if (!session) {
-      return res.status(404).json({ message: "Session not found" });
+      if(error.response){
+        console.log(error.response.data)
+      }
+
+      res.status(500).json({
+        message:
+          "Failed to submit answer"
+      });
+
     }
 
-    // Calculate final score
-    let totalScore = 0;
-    session.questions.forEach(q => {
-      totalScore += q.score;
-    });
-
-    session.finalScore = totalScore;
-    session.status = "Completed";
-
-    await session.save();
-
-    res.json({
-      message: "Interview completed",
-      finalScore: totalScore,
-      totalQuestions: session.questions.length
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-});
+);
+
+
+// COMPLETE INTERVIEW
+router.post(
+  "/complete",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const { sessionId } = req.body;
+
+      const session =
+        await InterviewSession.findById(
+          sessionId
+        );
+
+      if (!session) {
+        return res.status(404).json({
+          message: "Session not found"
+        });
+      }
+
+      let totalScore = 0;
+
+      session.questions.forEach((q) => {
+        totalScore += q.score;
+      });
+
+      session.finalScore = totalScore;
+
+      session.status = "Completed";
+
+      await session.save();
+
+      res.json({
+        message:
+          "Interview completed",
+        finalScore: totalScore
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        message:
+          "Failed to complete interview"
+      });
+
+    }
+
+  }
+);
+
+
+// SUMMARY
+router.get(
+  "/summary/:sessionId",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const session =
+        await InterviewSession.findById(
+          req.params.sessionId
+        );
+
+      if (!session) {
+        return res.status(404).json({
+          message: "Session not found"
+        });
+      }
+
+      let strengths = [];
+      let weaknesses = [];
+
+      session.questions.forEach((q) => {
+
+        if (q.score >= 7) {
+          strengths.push(
+            q.questionText
+          );
+        } else {
+          weaknesses.push(
+            q.questionText
+          );
+        }
+
+      });
+
+      const averageScore =
+        session.questions.length > 0
+          ? (
+              session.finalScore /
+              session.questions.length
+            ).toFixed(1)
+          : 0;
+
+      res.json({
+        totalScore:
+          session.finalScore,
+
+        averageScore,
+
+        questions:
+          session.questions,
+
+        strengths,
+
+        weaknesses,
+
+        improvementTips: [
+          "Provide more technical depth",
+          "Use practical examples",
+          "Explain concepts clearly",
+          "Improve communication structure"
+        ]
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        message:
+          "Failed to generate summary"
+      });
+
+    }
+
+  }
+);
+
+
+// HISTORY
+router.get(
+  "/history",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const sessions =
+        await InterviewSession.find({
+          user: req.user.id
+        }).sort({
+          createdAt: -1
+        });
+
+      res.json(sessions);
+
+    } catch (error) {
+
+      res.status(500).json({
+        message:
+          "Failed to fetch history"
+      });
+
+    }
+
+  }
+);
 
 module.exports = router;
