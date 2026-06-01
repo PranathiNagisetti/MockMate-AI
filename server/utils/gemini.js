@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(
 );
 
 const MODEL_CANDIDATES = [
-  "gemini-2.0-flash",
+  
   "gemini-2.5-flash"
 ];
 

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
+import * as faceapi from "face-api.js";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
 
@@ -11,6 +11,8 @@ function Interview() {
   const navigate = useNavigate();
 
   const videoRef = useRef(null);
+
+  const chunksRef = useRef([]);
 
   // CAMERA STATES
   const [stream, setStream] = useState(null);
@@ -56,6 +58,15 @@ function Interview() {
   const [showFullscreenWarning, setShowFullscreenWarning] =
     useState(false);
 
+  const detectionInterval = useRef(null);
+
+  const [modelsLoaded, setModelsLoaded] =
+    useState(false);
+
+  const [faceWarnings, setFaceWarnings] =
+    useState([]);
+
+  const lastFaceStatus = useRef("");
   // LOAD QUESTIONS
   useEffect(() => {
 
@@ -82,114 +93,335 @@ function Interview() {
 
   }, [sessionId]);
 
-  // START CAMERA
-  const startCamera = async () => {
-
+  //Load models
+  // LOAD FACE API MODELS
+useEffect(() => {
+  const loadModels = async () => {
     try {
+      const MODEL_URL = "/models";
 
-      const mediaStream =
-        await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true
-        });
+      console.log("Loading models from:", MODEL_URL);
 
-      setStream(mediaStream);
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      console.log("TinyFaceDetector Loaded");
 
-      if (videoRef.current) {
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      console.log("FaceLandmark Loaded");
 
-        videoRef.current.srcObject =
-          mediaStream;
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      console.log("FaceRecognition Loaded");
 
-      }
-
-    } catch (error) {
-
-      console.log(error);
-
-      alert("Unable to access webcam");
-
-    }
-
-  };
-
-  // START INTERVIEW
-  const startInterview = async () => {
-
-    try {
-
-      // START CAMERA
-      await startCamera();
-
-      // ENTER FULLSCREEN
-      if (document.documentElement.requestFullscreen) {
-
-        await document.documentElement.requestFullscreen();
-
-      }
-
-      setInterviewStarted(true);
+      setModelsLoaded(true);
+      console.log("✅ All Models Loaded");
 
     } catch (err) {
 
-      console.log(err);
-
-      alert(
-        "Please allow fullscreen and camera access"
-      );
+      console.log("Model Loading Error:", err);
 
     }
 
   };
 
-  // START RECORDING
-  const startRecording = () => {
+  loadModels();
 
-    if (!stream) {
+}, []);
 
-      alert("Camera not started");
+
+  // START CAMERA
+  const startCamera = async () => {
+
+  try {
+
+    const mediaStream =
+      await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: 640,
+          height: 480,
+          facingMode: "user"
+        },
+        audio: true
+      });
+
+    setStream(mediaStream);
+
+    if (videoRef.current) {
+
+      videoRef.current.srcObject =
+        mediaStream;
+        console.log(
+          "Video srcObject:",
+          videoRef.current.srcObject
+        );
+
+
+      await new Promise((resolve) => {
+
+        videoRef.current.onloadedmetadata =
+          async () => {
+
+            await videoRef.current.play();
+
+            resolve();
+
+          };
+
+      });
+
+    }
+
+    console.log("✅ Camera Started");
+    console.log("Stream:", mediaStream);
+    console.log("Tracks:", mediaStream.getTracks());
+
+    return mediaStream;
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert("Unable to access webcam");
+
+  }
+
+};
+
+
+const startInterview = async () => {
+
+  try {
+
+    if (!modelsLoaded) {
+
+      alert("Models still loading");
 
       return;
 
     }
 
-    const recorder =
-      new MediaRecorder(stream, {
-        mimeType: "video/webm"
-      });
+    const mediaStream =
+      await startCamera();
 
-    const chunks = [];
+    // FULLSCREEN
+    if (
+      document.documentElement.requestFullscreen
+    ) {
 
-    recorder.ondataavailable = (e) => {
+      await document.documentElement.requestFullscreen();
 
-      if (e.data.size > 0) {
+    }
 
-        chunks.push(e.data);
+    setInterviewStarted(true);
+
+    // START RECORDING
+    startRecording(mediaStream);
+
+    // WAIT FOR VIDEO
+    setTimeout(async () => {
+
+      if (videoRef.current) {
+
+        await videoRef.current.play();
 
       }
 
-    };
+      startFaceDetection();
 
-    recorder.onstop = () => {
+    }, 4000);
 
-      const blob =
-        new Blob(chunks, {
-          type: "video/webm"
-        });
+  } catch (err) {
 
-      const url =
-        URL.createObjectURL(blob);
+    console.log(err);
 
-      setVideoURL(url);
+    alert(
+      "Please allow camera and fullscreen"
+    );
 
-    };
+  }
 
-    recorder.start();
+};
 
-    setMediaRecorder(recorder);
+  // START RECORDING
+  const startRecording = (
+  mediaStream = stream
+) => {
 
-    setRecording(true);
+  if (!mediaStream) {
+
+    alert("Camera not started");
+
+    return;
+
+  }
+
+  chunksRef.current = [];
+
+  const recorder =
+    new MediaRecorder(mediaStream);
+
+  recorder.ondataavailable = (e) => {
+
+    if (e.data.size > 0) {
+
+      chunksRef.current.push(e.data);
+
+    }
 
   };
+
+  recorder.onstop = () => {
+
+    const blob =
+      new Blob(chunksRef.current, {
+        type: "video/webm"
+      });
+
+    const url =
+      URL.createObjectURL(blob);
+
+    setVideoURL(url);
+
+  };
+
+  recorder.start();
+
+  setMediaRecorder(recorder);
+
+  setRecording(true);
+
+};
+
+
+  // FACE DETECTION
+  const startFaceDetection = () => {
+
+  // STOP OLD INTERVAL
+  if (detectionInterval.current) {
+
+    clearInterval(detectionInterval.current);
+
+  }
+
+  if (!modelsLoaded) {
+
+    console.log("❌ Models not loaded");
+
+    return;
+
+  }
+
+  if (!videoRef.current) {
+
+    console.log("❌ Video ref missing");
+
+    return;
+
+  }
+
+  console.log("✅ Face Detection Started");
+
+  detectionInterval.current =
+    setInterval(async () => {
+
+      try {
+
+        const video = videoRef.current;
+
+        // VIDEO NOT READY
+        if (
+          !video ||
+          video.readyState !== 4 ||
+          video.videoWidth === 0
+        ) {
+
+          console.log("⏳ Waiting for video");
+
+          return;
+
+        }
+
+        const detections =
+          await faceapi.detectAllFaces(
+            video,
+            new faceapi.TinyFaceDetectorOptions({
+              inputSize: 224,
+              scoreThreshold: 0.3
+            })
+          );
+
+        console.log(
+          "Detected Faces:",
+          detections.length
+        );
+
+        // NO FACE
+        if (detections.length === 0) {
+
+          if (
+            lastFaceStatus.current !==
+            "NO_FACE"
+          ) {
+
+            lastFaceStatus.current =
+              "NO_FACE";
+
+            setFaceWarnings((prev) => [
+              ...prev,
+              "⚠ No face detected"
+            ]);
+
+            setWarningCount(
+              (prev) => prev + 1
+            );
+
+          }
+
+        }
+
+        // MULTIPLE FACES
+        else if (detections.length > 1) {
+
+          if (
+            lastFaceStatus.current !==
+            "MULTIPLE"
+          ) {
+
+            lastFaceStatus.current =
+              "MULTIPLE";
+
+            setFaceWarnings((prev) => [
+              ...prev,
+              "⚠ Multiple faces detected"
+            ]);
+
+            setWarningCount(
+              (prev) => prev + 1
+            );
+
+          }
+
+        }
+
+        // NORMAL
+        else {
+
+          lastFaceStatus.current = "NORMAL";
+
+        }
+
+      } catch (err) {
+
+        console.log(
+          "❌ Face Detection Error:",
+          err
+        );
+
+      }
+
+    }, 2000);
+
+};
+
+      
 
   // STOP RECORDING
   const stopRecording = () => {
@@ -197,8 +429,6 @@ function Interview() {
     if (mediaRecorder) {
 
       mediaRecorder.stop();
-
-      setMediaRecorder(null);
 
       setRecording(false);
 
@@ -219,6 +449,11 @@ function Interview() {
           (track) => track.stop()
         );
 
+      }
+      if (detectionInterval.current) {
+        clearInterval(
+          detectionInterval.current
+        );
       }
 
     };
@@ -468,6 +703,14 @@ function Interview() {
     }
 
   }, [warningCount]);
+
+  useEffect(() => {
+  if (stream && videoRef.current) {
+    console.log("Attaching stream");
+    videoRef.current.srcObject = stream;
+    videoRef.current.play();
+  }
+}, [stream, interviewStarted]);
 
   // TEXT TO SPEECH
   const speakQuestion = () => {
@@ -763,6 +1006,20 @@ function Interview() {
         <h3 style={{ color: "red" }}>
           🚨 Warnings: {warningCount}
         </h3>
+        {
+          faceWarnings.map((warning, index) => (
+
+           <p
+              key={index}
+              style={{
+               color: "orange"
+             }}
+          >
+               {warning}
+          </p>
+
+  ))
+}
 
         {
           warnings.map((warning, index) => (
@@ -856,7 +1113,9 @@ function Interview() {
               width="400"
               style={{
                 borderRadius: "10px",
-                border: "2px solid gray"
+                border: "2px solid gray",
+                backgroundColor: "black"  
+
               }}
             />
 
@@ -880,6 +1139,55 @@ function Interview() {
             }}
           />
 
+
+          {
+  videoURL && (
+
+    <div
+      style={{
+        marginTop: "20px"
+      }}
+    >
+
+      <h3 style={{ color: "black" }}>
+        Recorded Video
+      </h3>
+
+      <video
+        src={videoURL}
+        controls
+        width="400"
+        style={{
+          borderRadius: "10px"
+        }}
+      />
+      <p style={{ color: "green" }}>
+  Models Loaded:
+  {modelsLoaded ? " YES" : " NO"}
+</p>
+
+      <br />
+
+      <a
+        href={videoURL}
+        download="mockmate-interview.webm"
+      >
+
+        <button
+          style={{
+            marginTop: "10px",
+            padding: "10px"
+          }}
+        >
+          Download Recording
+        </button>
+
+      </a>
+
+    </div>
+
+  )
+}
           <button
             onClick={() =>
               submitAnswer(false)
