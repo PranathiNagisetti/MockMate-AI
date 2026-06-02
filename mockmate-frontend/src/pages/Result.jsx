@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import API from "../services/api"
 import Navbar from "../components/Navbar"
-
+import generatePDF from "../utils/generatePDF";
 function Result() {
 
   const { sessionId } = useParams()
@@ -116,7 +116,21 @@ function Result() {
         <hr />
 
         <h2>Strengths</h2>
-
+        <button
+  onClick={() => generatePDF(result)}
+  style={{
+    padding: "12px 20px",
+    marginTop: "20px",
+    marginBottom: "20px",
+    backgroundColor: "#2563eb",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer"
+  }}
+>
+  Download AI Report PDF
+</button>
         <ul>
           {result.strengths.map((s, index) => (
             <li key={index}>{s}</li>

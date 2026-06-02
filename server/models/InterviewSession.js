@@ -79,7 +79,13 @@ const InterviewSessionSchema = new mongoose.Schema(
       type: String,
       enum: ["Started", "Completed"],
       default: "Started"
-    }
+    },
+
+    videoUrl: {
+      type: String,
+      default: ""
+    },
+
   },
   { timestamps: true }
 );

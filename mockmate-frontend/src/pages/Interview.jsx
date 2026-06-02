@@ -268,19 +268,60 @@ const startInterview = async () => {
 
   };
 
-  recorder.onstop = () => {
+  recorder.onstop = async () => {
 
-    const blob =
-      new Blob(chunksRef.current, {
-        type: "video/webm"
-      });
+  const blob =
+    new Blob(
+      chunksRef.current,
+      { type: "video/webm" }
+    );
 
-    const url =
-      URL.createObjectURL(blob);
+  const url =
+    URL.createObjectURL(blob);
 
-    setVideoURL(url);
+  setVideoURL(url);
 
-  };
+  try {
+
+    const formData =
+      new FormData();
+
+    formData.append(
+      "video",
+      blob,
+      "interview.webm"
+    );
+
+    formData.append(
+      "sessionId",
+      sessionId
+    );
+
+    await API.post(
+      "/interview/upload-video",
+      formData,
+      {
+        headers: {
+          "Content-Type":
+            "multipart/form-data"
+        }
+      }
+    );
+
+    console.log(
+      "✅ Video Uploaded"
+    );
+
+  } catch (err) {
+
+    console.log(
+      "Upload Error",
+      err
+    );
+
+  }
+
+};
 
   recorder.start();
 

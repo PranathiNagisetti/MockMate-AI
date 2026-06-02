@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-
+const upload =
+require("../middleware/uploadMiddleware");
 const InterviewSession = require(
   "../models/InterviewSession"
 );
@@ -388,6 +389,54 @@ router.get(
       res.status(500).json({
         message:
           "Failed to fetch history"
+      });
+
+    }
+
+  }
+);
+
+router.post(
+  "/upload-video",
+  authMiddleware,
+  upload.single("video"),
+
+  async (req, res) => {
+
+    try {
+
+      const { sessionId } = req.body;
+
+      const session =
+      await InterviewSession.findById(
+        sessionId
+      );
+
+      if (!session) {
+
+        return res.status(404).json({
+          message: "Session not found"
+        });
+
+      }
+
+      session.videoUrl =
+        `/uploads/${req.file.filename}`;
+
+      await session.save();
+
+      res.json({
+        videoUrl:
+          session.videoUrl
+      });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Video upload failed"
       });
 
     }
