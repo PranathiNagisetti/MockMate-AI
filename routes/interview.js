@@ -3,7 +3,7 @@ const router = express.Router();
 const InterviewSession = require("../models/InterviewSession");
 const authMiddleware = require("../middleware/authMiddleware");
 const {generateInterviewQuestions} = require("../utils/gemini");
-const evaluateAnswer = require("../utils/evaluateAnswer")
+const evaluateAnswer = require("../utils/evaluateAnswer");
 // 🔥 Start Interview
 router.post("/start", authMiddleware, async (req, res) => {
   try {
@@ -121,7 +121,7 @@ res.status(500).json({error:"Evaluation failed"})
 
 }
 
-})
+});
 
 // 🔥 Complete Interview
 router.post("/complete", authMiddleware, async (req, res) => {
@@ -155,5 +155,137 @@ router.post("/complete", authMiddleware, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+
+//Summary
+router.get(
+  "/summary/:sessionId",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const session =
+        await InterviewSession.findById(
+          req.params.sessionId
+        );
+
+      if (!session) {
+
+        return res.status(404).json({
+          message: "Session not found"
+        });
+
+      }
+
+      const strengths = [];
+      const weaknesses = [];
+
+      session.questions.forEach((q) => {
+
+        if (q.score >= 7) {
+
+          strengths.push(
+            q.questionText
+          );
+
+        } else {
+
+          weaknesses.push(
+            q.questionText
+          );
+
+        }
+
+      });
+
+      const averageScore =
+        session.questions.length > 0
+          ? (
+              session.finalScore /
+              session.questions.length
+            ).toFixed(1)
+          : 0;
+
+      res.json({
+        totalScore:
+          session.finalScore,
+
+        averageScore,
+
+        questions:
+          session.questions,
+
+        strengths,
+
+        weaknesses,
+
+        improvementTips: [
+          "Provide more technical depth",
+          "Use practical examples",
+          "Structure answers clearly",
+          "Improve communication"
+        ]
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Summary Error:",
+        error
+      );
+
+      res.status(500).json({
+        error: error.message
+      });
+
+    }
+
+  }
+);
+
+
+router.get(
+  "/history",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      console.log("req.user =", req.user);
+      console.log("typeof =", typeof req.user);
+
+      const sessions =
+        await InterviewSession.find({
+          user: req.user
+        }).sort({createdAt: -1 });
+
+      console.log(
+        "Sessions Found:",
+        sessions.length
+      );
+
+      res.json(sessions);
+
+    } catch (error) {
+
+      console.error(
+        "History Error:",
+        error
+      );
+      
+
+        res.status(500).json({
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+
+
+
+    }
+
+  }
+);
 
 module.exports = router;

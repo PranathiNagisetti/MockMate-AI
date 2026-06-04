@@ -107,6 +107,117 @@ router.post(
   }
 );
 
+router.get("/test", (req, res) => {
+  console.log("TEST ROUTE HIT");
+  res.json({ message: "working" });
+});
+
+
+// HISTORY
+router.get(
+  "/history",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const sessions =
+        await InterviewSession.find({
+          user: req.user.id
+        }).sort({
+          createdAt: -1
+        });
+
+      res.json(sessions);
+
+    } catch (error) {
+
+      res.status(500).json({
+        message:
+          "Failed to fetch history"
+      });
+
+    }
+
+  }
+);
+
+// SUMMARY
+router.get(
+  "/summary/:sessionId",
+  authMiddleware,
+  async (req, res) => {
+
+    try {
+
+      const session =
+        await InterviewSession.findById(
+          req.params.sessionId
+        );
+
+      if (!session) {
+        return res.status(404).json({
+          message: "Session not found"
+        });
+      }
+
+      let strengths = [];
+      let weaknesses = [];
+
+      session.questions.forEach((q) => {
+
+        if (q.score >= 7) {
+          strengths.push(
+            q.questionText
+          );
+        } else {
+          weaknesses.push(
+            q.questionText
+          );
+        }
+
+      });
+
+      const averageScore =
+        session.questions.length > 0
+          ? (
+              session.finalScore /
+              session.questions.length
+            ).toFixed(1)
+          : 0;
+
+      res.json({
+        totalScore:
+          session.finalScore,
+
+        averageScore,
+
+        questions:
+          session.questions,
+
+        strengths,
+
+        weaknesses,
+
+        improvementTips: [
+          "Provide more technical depth",
+          "Use practical examples",
+          "Explain concepts clearly",
+          "Improve communication structure"
+        ]
+      });
+
+    } catch (error) {
+
+      res.status(500).json({
+        message:
+          "Failed to generate summary"
+      });
+
+    }
+
+  }
+);
 
 // GET QUESTIONS
 router.get(
@@ -289,112 +400,10 @@ router.post(
 );
 
 
-// SUMMARY
-router.get(
-  "/summary/:sessionId",
-  authMiddleware,
-  async (req, res) => {
-
-    try {
-
-      const session =
-        await InterviewSession.findById(
-          req.params.sessionId
-        );
-
-      if (!session) {
-        return res.status(404).json({
-          message: "Session not found"
-        });
-      }
-
-      let strengths = [];
-      let weaknesses = [];
-
-      session.questions.forEach((q) => {
-
-        if (q.score >= 7) {
-          strengths.push(
-            q.questionText
-          );
-        } else {
-          weaknesses.push(
-            q.questionText
-          );
-        }
-
-      });
-
-      const averageScore =
-        session.questions.length > 0
-          ? (
-              session.finalScore /
-              session.questions.length
-            ).toFixed(1)
-          : 0;
-
-      res.json({
-        totalScore:
-          session.finalScore,
-
-        averageScore,
-
-        questions:
-          session.questions,
-
-        strengths,
-
-        weaknesses,
-
-        improvementTips: [
-          "Provide more technical depth",
-          "Use practical examples",
-          "Explain concepts clearly",
-          "Improve communication structure"
-        ]
-      });
-
-    } catch (error) {
-
-      res.status(500).json({
-        message:
-          "Failed to generate summary"
-      });
-
-    }
-
-  }
-);
 
 
-// HISTORY
-router.get(
-  "/history",
-  authMiddleware,
-  async (req, res) => {
 
-    try {
 
-      const sessions =
-        await InterviewSession.find({
-          user: req.user.id
-        }).sort({
-          createdAt: -1
-        });
-
-      res.json(sessions);
-
-    } catch (error) {
-
-      res.status(500).json({
-        message:
-          "Failed to fetch history"
-      });
-
-    }
-
-  }
-);
 
 router.post(
   "/upload-video",
