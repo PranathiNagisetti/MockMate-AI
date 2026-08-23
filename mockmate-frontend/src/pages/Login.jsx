@@ -20,7 +20,7 @@ function Login(){
 
       localStorage.setItem("token",res.data.token)
 
-      navigate("/dashboard")
+      navigate("/main-dashboard")
 
     }catch(err){
 
@@ -33,42 +33,43 @@ function Login(){
   }
 
   return (
-  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-4">
+  <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-100 flex items-center justify-center px-4">
 
-    {/* Background Blur Effects */}
-    <div className="absolute w-72 h-72 bg-blue-500/20 blur-3xl rounded-full top-10 left-10"></div>
-    <div className="absolute w-72 h-72 bg-purple-500/20 blur-3xl rounded-full bottom-10 right-10"></div>
+    {/* Background Decorations */}
+    <div className="absolute top-0 left-0 w-80 h-80 bg-green-200 rounded-full blur-3xl opacity-30"></div>
+    <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-300 rounded-full blur-3xl opacity-25"></div>
 
     <div className="relative w-full max-w-md">
 
-      {/* Logo Section */}
+      {/* Logo */}
       <div className="text-center mb-8">
 
-        <h1 className="text-5xl font-extrabold text-white mb-3">
-          MockMate<span className="text-blue-500">.AI</span>
+        <h1 className="text-5xl font-extrabold text-gray-800">
+          MockMate
+          <span className="text-green-600">.AI</span>
         </h1>
 
-        <p className="text-slate-400 text-lg">
+        <p className="text-gray-600 mt-3">
           Practice. Improve. Get Hired.
         </p>
 
       </div>
 
       {/* Card */}
-      <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8">
+      <div className="bg-white rounded-3xl shadow-2xl border border-green-100 p-10">
 
-        <h2 className="text-2xl font-bold text-white mb-2">
+        <h2 className="text-3xl font-bold text-gray-800">
           Welcome Back 👋
         </h2>
 
-        <p className="text-slate-400 mb-6">
-          Login to continue your AI interview journey
+        <p className="text-gray-500 mt-2 mb-8">
+          Sign in to continue your AI interview journey.
         </p>
 
         {/* Email */}
-        <div className="mb-4">
+        <div className="mb-5">
 
-          <label className="block text-slate-300 mb-2">
+          <label className="block text-gray-700 font-medium mb-2">
             Email Address
           </label>
 
@@ -76,19 +77,21 @@ function Login(){
             type="email"
             placeholder="Enter your email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e)=>setEmail(e.target.value)}
             className="
               w-full
-              p-4
+              px-4
+              py-3
               rounded-xl
-              bg-slate-800/70
               border
-              border-slate-700
-              text-white
-              placeholder:text-slate-500
+              border-gray-300
+              bg-gray-50
+              text-gray-800
+              placeholder-gray-400
               focus:outline-none
               focus:ring-2
-              focus:ring-blue-500
+              focus:ring-green-500
+              focus:border-green-500
               transition
             "
           />
@@ -96,9 +99,9 @@ function Login(){
         </div>
 
         {/* Password */}
-        <div className="mb-6">
+        <div className="mb-8">
 
-          <label className="block text-slate-300 mb-2">
+          <label className="block text-gray-700 font-medium mb-2">
             Password
           </label>
 
@@ -106,19 +109,21 @@ function Login(){
             type="password"
             placeholder="Enter your password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e)=>setPassword(e.target.value)}
             className="
               w-full
-              p-4
+              px-4
+              py-3
               rounded-xl
-              bg-slate-800/70
               border
-              border-slate-700
-              text-white
-              placeholder:text-slate-500
+              border-gray-300
+              bg-gray-50
+              text-gray-800
+              placeholder-gray-400
               focus:outline-none
               focus:ring-2
-              focus:ring-blue-500
+              focus:ring-green-500
+              focus:border-green-500
               transition
             "
           />
@@ -130,39 +135,48 @@ function Login(){
           onClick={login}
           className="
             w-full
+            py-3.5
+            rounded-xl
             bg-gradient-to-r
-            from-blue-600
-            to-indigo-600
-            hover:from-blue-700
-            hover:to-indigo-700
+            from-green-600
+            to-emerald-500
+            hover:from-green-700
+            hover:to-emerald-600
             text-white
             font-semibold
-            py-4
-            rounded-xl
+            shadow-lg
+            hover:shadow-xl
             transition-all
             duration-300
-            shadow-lg
-            hover:scale-[1.02]
+            hover:-translate-y-0.5
           "
         >
           Login
         </button>
 
+        {/* Divider */}
+        <div className="flex items-center my-8">
+
+          <div className="flex-1 border-t border-gray-200"></div>
+
+          <span className="px-3 text-gray-400 text-sm">
+            OR
+          </span>
+
+          <div className="flex-1 border-t border-gray-200"></div>
+
+        </div>
+
         {/* Register */}
-        <p className="text-center text-slate-400 mt-6">
+        <p className="text-center text-gray-600">
 
           Don't have an account?
 
           <Link
             to="/register"
-            className="
-              text-blue-400
-              ml-2
-              font-semibold
-              hover:text-blue-300
-            "
+            className="ml-2 font-semibold text-green-600 hover:text-green-700"
           >
-            Register
+            Create Account
           </Link>
 
         </p>

@@ -2,35 +2,117 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
-
 import { ArrowLeft } from "lucide-react";
-
-function Dashboard() {
-  const [role, setRole] = useState("");
+function CompanyDashboard() {
+  const [company, setCompany] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [experience, setExperience] = useState("");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const roles = [
-    "Software Engineer",
-    "Frontend Developer",
-    "Backend Developer",
-    "Full Stack Developer",
-    "Java Developer",
-    "Python Developer",
-    "Data Analyst",
-    "Data Scientist",
-    "Machine Learning Engineer",
-    "DevOps Engineer",
-    "Cyber Security Engineer",
-    "Cloud Engineer",
-    "Android Developer",
-  ];
+const companies = [
+    "Google",
+    "Microsoft",
+    "Amazon",
+    "Apple",
+    "Meta",
+    "Netflix",
+    "Adobe",
+    "Oracle",
+    "IBM",
+    "Intel",
+    "NVIDIA",
+    "Cisco",
+    "Salesforce",
+    "SAP",
+    "Atlassian",
+    "Uber",
+    "Airbnb",
+    "LinkedIn",
+    "Twitter (X)",
+    "Snap",
+    "Spotify",
+    "PayPal",
+    "Stripe",
+    "Square (Block)",
+    "Visa",
+    "Mastercard",
+    "Goldman Sachs",
+    "JPMorgan Chase",
+    "Morgan Stanley",
+    "Bloomberg",
+    "Tesla",
+    "SpaceX",
+    "Samsung",
+    "Qualcomm",
+    "AMD",
+    "Broadcom",
+    "ServiceNow",
+    "Workday",
+    "Zoom",
+    "Dropbox",
+    "Red Hat",
+    "VMware",
+    "Dell Technologies",
+    "HP",
+    "Accenture",
+    "Capgemini",
+    "Cognizant",
+    "Infosys",
+    "TCS",
+    "Wipro",
+    "HCLTech",
+    "Tech Mahindra",
+    "LTIMindtree",
+    "Mphasis",
+    "Persistent Systems",
+    "EPAM Systems",
+    "Thoughtworks",
+    "Zoho",
+    "Freshworks",
+    "Flipkart",
+    "Myntra",
+    "Meesho",
+    "PhonePe",
+    "Paytm",
+    "Razorpay",
+    "CRED",
+    "Groww",
+    "Zerodha",
+    "Swiggy",
+    "Zomato",
+    "Ola",
+    "OYO",
+    "BYJU'S",
+    "Unacademy",
+    "Dream11",
+    "BrowserStack",
+    "InMobi",
+    "ShareChat",
+    "CoinDCX",
+    "Juspay",
+    "Postman",
+    "Naukri (Info Edge)",
+    "Walmart Global Tech",
+    "Target",
+    "Bosch",
+    "Siemens",
+    "Philips",
+    "Honeywell",
+    "GE Healthcare",
+    "Shell",
+    "Ford",
+    "Boeing",
+    "Expedia",
+    "Booking.com",
+    "Slack",
+    "GitHub",
+    "OpenAI"
+    ];
 
   const startInterview = async () => {
-    if (!role || !difficulty || !experience) {
+    if (!company || !difficulty || !experience) {
       alert("Please fill all fields");
       return;
     }
@@ -38,13 +120,13 @@ function Dashboard() {
     try {
       setLoading(true);
 
-      const res = await API.post("/interview/start", {
-        role,
+      const res = await API.post("/company-interview/start", {
+        company,
         difficulty,
         experience,
       });
 
-      navigate(`/interview/${res.data.sessionId}`);
+      navigate(`/company-interview/${res.data.sessionId}`);
     } catch (err) {
       console.log(err);
 
@@ -62,9 +144,16 @@ function Dashboard() {
       <Navbar />
 
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-100">
+
         <div className="mb-6">
 
-                
+                <button
+                    onClick={() => navigate("/main-dashboard")}
+                    className="flex items-center gap-2 text-green-700 hover:text-green-900 transition-colors font-medium"
+                >
+                    <ArrowLeft size={24} />
+                    <span>Back</span>
+                </button>
 
             </div>
         {/* Background */}
@@ -79,13 +168,6 @@ function Dashboard() {
             <h1 className="text-5xl font-extrabold text-gray-800">
               Ace Your Next Interview
             </h1>
-            <button
-                    onClick={() => navigate("/main-dashboard")}
-                    className="flex items-center gap-2 text-green-700 hover:text-green-900 transition-colors font-medium"
-                >
-                    <ArrowLeft size={24} />
-                    <span>Back</span>
-                </button>
 
             <p className="mt-5 text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Practice realistic AI-powered interviews, receive
@@ -106,17 +188,17 @@ function Dashboard() {
                   Interview Configuration
                 </h2>
 
-                {/* Role */}
+                {/* Company */}
                 <div className="mb-7">
 
                   <label className="block text-gray-700 font-semibold mb-3">
-                    Job Role
+                    Company
                   </label>
 
                   <select
-                    value={role}
+                    value={company}
                     onChange={(e) =>
-                      setRole(e.target.value)
+                      setCompany(e.target.value)
                     }
                     className="
                         w-full
@@ -132,10 +214,10 @@ function Dashboard() {
                       "
                     >
                     <option value="" className="text-gray-800">
-                    Select a Job Role
+                    Select a Company
                   </option>
 
-                  {roles.map((item) => (
+                  {companies.map((item) => (
                     <option
                       key={item}
                       value={item}
@@ -241,7 +323,7 @@ function Dashboard() {
                       </h3>
 
                       <p className="text-gray-500 text-sm">
-                        Personalized questions based on your selected role.
+                        Personalized questions based on your selected Company.
                       </p>
                     </div>
                   </div>
@@ -361,7 +443,7 @@ function Dashboard() {
 
               </div>
 
-              
+             
 
             </div>
 
@@ -370,8 +452,9 @@ function Dashboard() {
         </div>
 
       </div>
+
     </>
   );
 }
 
-export default Dashboard;
+export default CompanyDashboard;

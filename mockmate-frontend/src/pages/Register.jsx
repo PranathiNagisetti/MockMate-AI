@@ -62,137 +62,219 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 overflow-hidden">
+  <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-100 flex items-center justify-center px-4">
 
-      {/* Background Effects */}
-      <div className="absolute w-96 h-96 bg-blue-500/20 blur-3xl rounded-full top-10 left-20"></div>
+    {/* Background Decorations */}
+    <div className="absolute top-0 left-0 w-80 h-80 bg-green-200 rounded-full blur-3xl opacity-30"></div>
 
-      <div className="absolute w-96 h-96 bg-purple-500/20 blur-3xl rounded-full bottom-10 right-20"></div>
+    <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-300 rounded-full blur-3xl opacity-25"></div>
 
-      {/* Register Card */}
-      <div className="relative z-10 w-full max-w-md">
+    {/* Register Card */}
+    <div className="relative z-10 w-full max-w-md">
 
-        <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl p-8">
+      <div className="bg-white rounded-3xl shadow-2xl border border-green-100 p-10">
 
-          {/* Header */}
-          <div className="text-center mb-8">
+        {/* Header */}
+        <div className="text-center mb-8">
 
-            <h1 className="text-4xl font-bold text-white mb-2">
-              MockMate.ai
-            </h1>
+          <h1 className="text-5xl font-extrabold text-gray-800">
+            MockMate
+            <span className="text-green-600">.AI</span>
+          </h1>
 
-            <p className="text-slate-400">
-              Create Your AI Interview Account
-            </p>
-
-          </div>
-
-          {/* Full Name */}
-          <div className="mb-4">
-
-            <label className="block text-slate-300 mb-2">
-              Full Name
-            </label>
-
-            <input
-              type="text"
-              placeholder="Enter your full name"
-              value={fullName}
-              onChange={(e) =>
-                setFullName(e.target.value)
-              }
-              className="w-full p-3 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:border-blue-500"
-            />
-
-          </div>
-
-          {/* Email */}
-          <div className="mb-4">
-
-            <label className="block text-slate-300 mb-2">
-              Email Address
-            </label>
-
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              className="w-full p-3 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:border-blue-500"
-            />
-
-          </div>
-
-          {/* Password */}
-          <div className="mb-4">
-
-            <label className="block text-slate-300 mb-2">
-              Password
-            </label>
-
-            <input
-              type="password"
-              placeholder="Create a password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              className="w-full p-3 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:border-blue-500"
-            />
-
-          </div>
-
-          {/* Confirm Password */}
-          <div className="mb-6">
-
-            <label className="block text-slate-300 mb-2">
-              Confirm Password
-            </label>
-
-            <input
-              type="password"
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) =>
-                setConfirmPassword(
-                  e.target.value
-                )
-              }
-              className="w-full p-3 rounded-xl bg-slate-800 text-white border border-slate-700 focus:outline-none focus:border-blue-500"
-            />
-
-          </div>
-
-          {/* Register Button */}
-          <button
-            onClick={register}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition-all duration-300 p-3 rounded-xl font-semibold text-white shadow-lg"
-          >
-            Create Account
-          </button>
-
-          {/* Login Link */}
-          <p className="text-center text-slate-400 mt-6">
-
-            Already have an account?
-
-            <Link
-              to="/"
-              className="text-blue-400 ml-2 hover:text-blue-300"
-            >
-              Login
-            </Link>
-
+          <p className="text-gray-600 mt-3">
+            Create your AI Interview Account
           </p>
 
         </div>
 
+        {/* Full Name */}
+        <div className="mb-5">
+
+          <label className="block text-gray-700 font-medium mb-2">
+            Full Name
+          </label>
+
+          <input
+            type="text"
+            placeholder="Enter your full name"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="
+              w-full
+              px-4
+              py-3
+              rounded-xl
+              border
+              border-gray-300
+              bg-gray-50
+              text-gray-800
+              placeholder-gray-400
+              focus:outline-none
+              focus:ring-2
+              focus:ring-green-500
+              focus:border-green-500
+              transition
+            "
+          />
+
+        </div>
+
+        {/* Email */}
+        <div className="mb-5">
+
+          <label className="block text-gray-700 font-medium mb-2">
+            Email Address
+          </label>
+
+          <input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="
+              w-full
+              px-4
+              py-3
+              rounded-xl
+              border
+              border-gray-300
+              bg-gray-50
+              text-gray-800
+              placeholder-gray-400
+              focus:outline-none
+              focus:ring-2
+              focus:ring-green-500
+              focus:border-green-500
+              transition
+            "
+          />
+
+        </div>
+
+        {/* Password */}
+        <div className="mb-5">
+
+          <label className="block text-gray-700 font-medium mb-2">
+            Password
+          </label>
+
+          <input
+            type="password"
+            placeholder="Create a password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="
+              w-full
+              px-4
+              py-3
+              rounded-xl
+              border
+              border-gray-300
+              bg-gray-50
+              text-gray-800
+              placeholder-gray-400
+              focus:outline-none
+              focus:ring-2
+              focus:ring-green-500
+              focus:border-green-500
+              transition
+            "
+          />
+
+        </div>
+
+        {/* Confirm Password */}
+        <div className="mb-8">
+
+          <label className="block text-gray-700 font-medium mb-2">
+            Confirm Password
+          </label>
+
+          <input
+            type="password"
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChange={(e) =>
+              setConfirmPassword(e.target.value)
+            }
+            className="
+              w-full
+              px-4
+              py-3
+              rounded-xl
+              border
+              border-gray-300
+              bg-gray-50
+              text-gray-800
+              placeholder-gray-400
+              focus:outline-none
+              focus:ring-2
+              focus:ring-green-500
+              focus:border-green-500
+              transition
+            "
+          />
+
+        </div>
+
+        {/* Register Button */}
+        <button
+          onClick={register}
+          className="
+            w-full
+            py-3.5
+            rounded-xl
+            bg-gradient-to-r
+            from-green-600
+            to-emerald-500
+            hover:from-green-700
+            hover:to-emerald-600
+            text-white
+            font-semibold
+            shadow-lg
+            hover:shadow-xl
+            transition-all
+            duration-300
+            hover:-translate-y-0.5
+          "
+        >
+          Create Account
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center my-8">
+
+          <div className="flex-1 border-t border-gray-200"></div>
+
+          <span className="px-3 text-gray-400 text-sm">
+            OR
+          </span>
+
+          <div className="flex-1 border-t border-gray-200"></div>
+
+        </div>
+
+        {/* Login Link */}
+        <p className="text-center text-gray-600">
+
+          Already have an account?
+
+          <Link
+            to="/"
+            className="ml-2 font-semibold text-green-600 hover:text-green-700"
+          >
+            Login
+          </Link>
+
+        </p>
+
       </div>
 
     </div>
-  );
+
+  </div>
+);
 }
 
 export default Register;

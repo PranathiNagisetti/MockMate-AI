@@ -4,7 +4,7 @@ import * as faceapi from "face-api.js";
 import API from "../services/api";
 import Navbar from "../components/Navbar";
 
-function Interview() {
+function CompanyInterview() {
 
   const { sessionId } = useParams();
 
@@ -75,7 +75,7 @@ function Interview() {
       try {
 
         const res =
-          await API.get(`/interview/${sessionId}`);
+          await API.get(`/company-interview/${sessionId}`);
 
         setQuestions(res.data.questions);
 
@@ -298,7 +298,7 @@ const startInterview = async () => {
     );
 
     await API.post(
-      "/interview/upload-video",
+      "/company-interview/upload-video",
       formData,
       {
         headers: {
@@ -929,7 +929,7 @@ const startInterview = async () => {
       window.speechSynthesis.cancel();
 
       await API.post(
-        "/interview/submit-answer",
+        "/company-interview/submit-answer",
         {
           sessionId,
           questionIndex: current,
@@ -953,7 +953,7 @@ const startInterview = async () => {
       } else {
 
         await API.post(
-          "/interview/complete",
+          "/company-interview/complete",
           { sessionId }
         );
 
@@ -1251,9 +1251,54 @@ const startInterview = async () => {
           />
 
 
-          
+          {
+  videoURL && (
 
+    <div
+      style={{
+        marginTop: "20px"
+      }}
+    >
 
+      <h3 style={{ color: "black" }}>
+        Recorded Video
+      </h3>
+
+      <video
+        src={videoURL}
+        controls
+        width="400"
+        style={{
+          borderRadius: "10px"
+        }}
+      />
+      <p style={{ color: "green" }}>
+  Models Loaded:
+  {modelsLoaded ? " YES" : " NO"}
+</p>
+
+      <br />
+
+      <a
+        href={videoURL}
+        download="mockmate-interview.webm"
+      >
+
+        <button
+          style={{
+            marginTop: "10px",
+            padding: "10px"
+          }}
+        >
+          Download Recording
+        </button>
+
+      </a>
+
+    </div>
+
+  )
+}
           <button
             onClick={() =>
               submitAnswer(false)
@@ -1322,4 +1367,4 @@ const startInterview = async () => {
 
 }
 
-export default Interview;
+export default CompanyInterview;
